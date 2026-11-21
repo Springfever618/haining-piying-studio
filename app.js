@@ -222,3 +222,47 @@ for (const tab of tabs) {
     next.focus();
   });
 }
+
+// ---- 体验码：记录用过的功能和体验时长，供问卷核对（不记录照片或任何个人信息） ----
+const QUESTIONNAIRE_URL = '';
+const EXP = {t0: Date.now(), mask: 0};
+const BITS = {photo:1, sample:2, drag:4, role:8, costume:16, pose:32, lora:64, export:128};
+const mark = k => { EXP.mask |= BITS[k]; renderCode(); };
+$('image').addEventListener('change', () => mark('photo'));
+$('sample').addEventListener('click', () => mark('sample'));
+src.addEventListener('pointerdown', () => mark('drag'));
+$('role').addEventListener('input', () => mark('role'));
+for (const id of ['hat','upper','lower','shoe','prop','mainColor','trim','gold','rods']) $(id).addEventListener('input', () => mark('costume'));
+$('pose').addEventListener('input', () => mark('pose'));
+$('animate').addEventListener('click', () => mark('pose'));
+$('compareTab').addEventListener('click', () => mark('lora'));
+$('example').addEventListener('change', () => mark('lora'));
+$('save').addEventListener('click', () => mark('export'));
+$('json').addEventListener('click', () => mark('export'));
+const B36 = (n, w) => Math.max(0, Math.floor(n)).toString(36).toUpperCase().padStart(w, '0').slice(-w);
+function expCode() {
+  const stamp = B36((EXP.t0 - Date.UTC(2026, 10, 1)) / 60000, 5);
+  const body = stamp + B36(EXP.mask, 2) + B36(Math.min(46655, (Date.now() - EXP.t0) / 1000), 3);
+  let s = 7; for (const [i, ch] of [...('hnsp' + body)].entries()) s = (s * 31 + ch.charCodeAt(0) * (i + 3)) % 1296;
+  const code = body + B36(s, 2);
+  return code.slice(0, 4) + '-' + code.slice(4, 8) + '-' + code.slice(8);
+}
+const usedCount = () => [...Object.values(BITS)].filter(b => EXP.mask & b).length;
+const panel = document.createElement('section');
+panel.className = 'panel'; panel.id = 'codePanel';
+panel.innerHTML = '<h2>体验码</h2><p id="codeHint" class="help"></p><p id="codeBox" style="font:600 28px/1.3 ui-monospace,Menlo,monospace;letter-spacing:.06em;margin:8px 0" hidden></p><p class="tools" id="codeTools" hidden><button type="button" id="copyCode">复制体验码</button><a id="goSurvey" target="_blank" rel="noopener" hidden>去填体验问卷</a></p>';
+document.querySelector('main').append(panel);
+function renderCode() {
+  const secs = (Date.now() - EXP.t0) / 1000, ok = usedCount() >= 2 && secs >= 45;
+  $('codeHint').textContent = ok ? '请把这串体验码填进问卷。码会随你继续体验而变化，以填写时页面上显示的为准。'
+    : '请至少体验 45 秒，并试用两种以上功能（比如上传照片或拖动关节、换行当或服饰、换动作），这里会出现体验码，问卷里需要填写。';
+  $('codeBox').hidden = $('codeTools').hidden = !ok;
+  if (ok) $('codeBox').textContent = expCode();
+  const go = $('goSurvey'); if (QUESTIONNAIRE_URL) { go.href = QUESTIONNAIRE_URL; go.hidden = false; }
+}
+$('copyCode').addEventListener('click', () => {
+  const t = $('codeBox').textContent, b = $('copyCode');
+  const sel = () => { const r = document.createRange(); r.selectNodeContents($('codeBox')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); b.textContent = '已选中，长按或 Ctrl+C 复制'; };
+  try { navigator.clipboard.writeText(t).then(() => { b.textContent = '已复制'; }, sel); } catch (e) { sel(); }
+});
+setInterval(renderCode, 5000); renderCode();

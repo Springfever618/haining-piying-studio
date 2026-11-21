@@ -66,6 +66,7 @@ function draw(){
     if(selected(side+'f'))limb(a,f,c.shoe==='战靴'?16:12,c.shoe==='弓靴'?7:10,'#302520',red,gold);
   }
   const chest=mid(j.ls,j.rs), hip=mid(j.lp,j.rp), [x,y]=j.nose;
+  if(c.upper==='靠'&&selected('body')){const back=shift(mid(j.ls,j.rs),-18,6);for(const [ang,col] of [[-2.3,red],[-2.0,gold],[-1.7,red],[-1.4,gold]]){const top=[back[0]+Math.cos(ang)*150,back[1]+Math.sin(ang)*150];line(back,top,'#5a4632',3);poly([top,[top[0]+Math.cos(ang+1.57)*26,top[1]+Math.sin(ang+1.57)*26],[back[0]+Math.cos(ang)*70+Math.cos(ang+1.57)*22,back[1]+Math.sin(ang)*70+Math.sin(ang+1.57)*22],[back[0]+Math.cos(ang)*70,back[1]+Math.sin(ang)*70]],col,'#26201b',1.5)}}
   if(selected('lower')&&c.lower!=='裤'){
     const hem=mid(j.lk,j.rk), flare=c.lower==='裙'?44:29;
     const a=shift(j.lp,-23,-27), b=shift(j.rp,22,-27), l=shift(hem,-flare,54), r=shift(hem,flare,54);
@@ -77,6 +78,10 @@ function draw(){
     poly([shift(j.ls,-8,-12),shift(chest,10,63),shift(j.rs,4,-12),shift(chest,-6,11)],red,gold);
     poly([shift(j.lp,-22,-8),shift(j.rp,22,-8),shift(j.rp,22,9),shift(j.lp,-22,9)],red,gold);
     for(const dy of [45,67,89]) if(y+dy<hip[1]-20)dot(shift(chest,0,dy),4,gold);
+    if(c.upper==='花衣'){for(const [dx,dy] of [[-30,30],[24,34],[-14,80],[30,92],[-34,118],[10,128]]){const q=shift(chest,dx,dy);if(q[1]<hip[1]){for(let t=0;t<5;t++){const an=t*Math.PI*2/5;dot([q[0]+Math.cos(an)*6,q[1]+Math.sin(an)*6],4.5,red,gold)}dot(q,3.5,gold)}}}
+    if(c.upper==='蟒袍'){const q=shift(chest,0,58);dot(q,27,red,gold);dot(q,19,green,gold);ctx.beginPath();ctx.moveTo(q[0]-14,q[1]+4);for(let t=0;t<=6;t++)ctx.lineTo(q[0]-14+t*4.7,q[1]+4+(t%2?-9:9));ctx.strokeStyle=gold;ctx.lineWidth=3;ctx.stroke();poly([shift(j.lp,-26,-22),shift(j.rp,26,-22),shift(j.rp,26,-9),shift(j.lp,-26,-9)],gold,'#26201b',2);for(const dx of [-16,0,16])dot(shift(hip,dx,-15),4,'#e8f0d8');}
+    if(c.upper==='靠'){for(let r=0;r<4;r++)for(let k=-2;k<=2;k++){const q=shift(chest,k*15+(r%2)*7,26+r*20);if(q[1]<hip[1]-6){ctx.beginPath();ctx.arc(q[0],q[1],8,0,Math.PI);ctx.strokeStyle=gold;ctx.lineWidth=2;ctx.stroke()}}dot(shift(chest,0,40),13,gold,red);}
+    if(c.upper==='衫'){line(shift(j.ls,6,-10),shift(chest,0,40),gold,1.5);line(shift(j.rs,-6,-10),shift(chest,0,40),gold,1.5);}
   }
   for(const side of ['r','l']){
     const s=j[side+'s'],e=j[side+'e'],w=j[side+'w'];
@@ -88,10 +93,10 @@ function draw(){
     limb(shift(chest,0,-4),[x+22,y+48],9,10,skin,skin,gold,false);
     poly([[x+8,y-44],[x+46,y-42],[x+60,y-15],[x+52,y+30],[x+30,y+51],[x+8,y+45],[x-3,y+31],[x-2,y+17],[x-15,y+9],[x-4,y-1],[x,y-22]],skin);
     poly([[x+2,y-23],[x+7,y-47],[x+34,y-56],[x+54,y-45],[x+65,y-22],[x+54,y+22],[x+45,y-8],[x+27,y-31]],'#282221');
-    if(c.role==='净')poly([[x-2,y-10],[x+29,y-19],[x+17,y+10],[x+7,y+14]],'#282221');
+    if(c.role==='净'){poly([[x-2,y-10],[x+29,y-19],[x+17,y+10],[x+7,y+14]],'#282221');poly([[x+12,y-30],[x+40,y-36],[x+30,y-14]],'#f3ecd8','#282221',1.5);line([x+2,y+30],[x+40,y+36],'#f3ecd8',4);}
     line([x+1,y-9],[x+16,y-12],'#3d281f',2);dot([x+7,y-3],2.7,'#251c17');
-    if(c.role==='末')poly([[x+3,y+27],[x+27,y+35],[x+37,y+78],[x+13,y+60]],'#43372e');
-    if(c.role==='丑')dot([x+7,y+5],6,'#f6e5c3');
+    if(c.role==='末')poly([[x-2,y+24],[x+30,y+30],[x+34,y+112],[x+16,y+120],[x+2,y+100]],'#2b2522');
+    if(c.role==='丑'){poly([[x-6,y-14],[x+20,y-14],[x+20,y+14],[x-6,y+14]],'#fbf6ea','#3d281f',1.5);}
     line([x-1,y+22],[x+9,y+23],red,2);
   }
   if(selected('hat')&&c.hat!=='无'){
@@ -145,6 +150,8 @@ function stopDemonstration(){
   demonstration=undefined;
   $('animate').textContent='演示动作';
 }
+const rolePresets={旦:{hat:'花冠',upper:'花衣',lower:'裙',shoe:'弓靴',mainColor:'#c23b5e',trim:'#2f6b5a',gold:'#e2bf72'},生:{hat:'文生巾',upper:'衫',lower:'袍摆',shoe:'朝靴',mainColor:'#2e5d8c',trim:'#e6ddc4',gold:'#d7b46a'},净:{hat:'武盔',upper:'靠',lower:'裤',shoe:'战靴',mainColor:'#25221f',trim:'#b3322a',gold:'#dcb56c'},末:{hat:'文生巾',upper:'蟒袍',lower:'袍摆',shoe:'朝靴',mainColor:'#7a5530',trim:'#2f5d4a',gold:'#d9b25f'},丑:{hat:'无',upper:'衫',lower:'裤',shoe:'平底靴',mainColor:'#d9cfae',trim:'#3a5f8a',gold:'#b58d4a'}};
+$('role').addEventListener('input',()=>{const pr=rolePresets[$('role').value];if(pr)for(const [k,v] of Object.entries(pr))$(k).value=v;});
 document.querySelector('.controls').addEventListener('input',()=>{stopDemonstration();draw()});
 $('animate').addEventListener('click',()=>{
   if(demonstration){stopDemonstration();draw();return}

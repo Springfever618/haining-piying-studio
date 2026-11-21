@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>海宁皮影工坊</title>
+<link rel="stylesheet" href="studio.css">
+</head>
+<body>
+<header><h1>海宁皮影工坊</h1><p>从真人姿态到可编辑的影偶部件</p></header>
+<main><nav class="tabs" role="tablist" aria-label="工作区"><button type="button" id="editorTab" role="tab" aria-controls="editor" aria-selected="true">影偶编辑</button><button type="button" id="compareTab" role="tab" aria-controls="comparison" aria-selected="false" tabindex="-1">LoRA 对比</button></nav>
+<div class="workspace" id="editor" role="tabpanel" aria-labelledby="editorTab">
+<section class="panel"><h2>真人姿态</h2><div class="tools stage-tools"><label class="file"><input id="image" type="file" accept="image/*"><span>上传全身照</span></label><button id="sample" type="button">示例姿态</button></div><div class="stage source"><canvas id="source" width="540" height="720" aria-label="源图与可拖动关节"></canvas></div><p id="status" role="status">可先拖动示例关节试用。</p><p class="help">建议上传单人、全身入镜的照片。照片只在你自己的浏览器里识别身体姿态，不上传、不保存，也不作为研究数据；关闭网页后即清除。研究只记录你之后填写的匿名问卷。</p></section>
+<section class="panel"><h2>影偶预览</h2><div class="tools stage-tools"><button id="animate" type="button">演示动作</button><button id="save" type="button">导出透明 PNG</button><button id="json" type="button">导出 JSON</button></div><div class="stage puppet"><canvas id="puppet" width="540" height="720" aria-label="实时生成的海宁风格影偶"></canvas></div><p class="help">服饰和动作会实时更新。PNG 导出为透明底。</p></section>
+<section class="panel controls"><h2>部件与服饰</h2><div class="fields"><label>头茬行当<select id="role"><option>旦</option><option>生</option><option>净</option><option>末</option><option>丑</option></select></label><label>冠帽<select id="hat"><option>花冠</option><option>文生巾</option><option>武盔</option><option>无</option></select></label><label>上身<select id="upper"><option>花衣</option><option>蟒袍</option><option>靠</option><option>衫</option></select></label><label>下身<select id="lower"><option>裙</option><option>袍摆</option><option>裤</option></select></label><label>足服<select id="shoe"><option>弓靴</option><option>朝靴</option><option>战靴</option><option>平底靴</option></select></label><label>持物<select id="prop"><option>无</option><option>折扇</option><option>油纸伞</option><option>长剑</option></select></label><label>影偶动作<select id="pose"><option value="photo">照片姿态</option><option value="bow">拱手作揖</option><option value="sleeve">扬袖</option><option value="sword">持剑亮相</option><option value="umbrella">撑伞</option></select></label><label>操纵杆<select id="rods"><option>显示</option><option>隐藏</option></select></label></div><div class="palette"><label class="color">主色<input id="mainColor" type="color" value="#295649"></label><label class="color">辅色<input id="trim" type="color" value="#a53631"></label><label class="color">描金<input id="gold" type="color" value="#dcb56c"></label></div><details><summary>部件可见性</summary><div class="checks" id="parts"></div></details></section></div>
+<section class="panel compare" id="comparison" role="tabpanel" aria-labelledby="compareTab" hidden><h2>LoRA 开关对比</h2><p class="hint">两张图使用同一提示词和种子。实验样例来自 SDXL 实测生成。</p><div class="tools"><label>实验样例 <select id="example"><option value="baisuzhen_s11201">白素贞</option><option value="xiaoqing_s11211">小青</option><option value="xuxian_s11221">许仙</option></select></label><button id="compareNow" type="button" hidden>用当前影偶生成一对</button></div><p id="compareStatus" class="help" role="status"></p><div class="compare-grid"><figure><img id="off" alt="同条件关闭 LoRA 的生成图"><figcaption>关闭 LoRA</figcaption></figure><figure><img id="on" alt="同条件开启 LoRA 的生成图"><figcaption>开启海宁 LoRA</figcaption></figure></div><p class="help">开启 LoRA 后可能出现操纵杆。样例中穿过人物或悬空的杆属于生成瑕疵。</p></section>
+<p class="help" style="margin-top:12px">体验完后，请打开体验问卷：<a href="https://claude.ai/artifact/VgFXRdDAfp31Zd1hApTjXa" target="_blank" rel="noopener">皮影工坊体验问卷</a></p></main>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>

@@ -9,7 +9,7 @@ const poses = {
   sword:{le:[167,262],lw:[124,185],re:[365,288],rw:[415,258],lk:[207,494],la:[164,620],lf:[126,636],rk:[335,503],ra:[377,625],rf:[343,638]},
   umbrella:{le:[191,288],lw:[152,374],re:[350,272],rw:[370,236]}
 };
-let joints=structuredClone(sample), picture, frame, detector, upload=0, drag, animated, demonstration, animation=0;
+let generated=true, modelPct=0, modelReady=false, joints=structuredClone(sample), picture, frame, detector, upload=0, drag, animated, demonstration, animation=0;
 for(const [key,name] of Object.entries(names)) {
   const label=document.createElement('label'), input=document.createElement('input');
   input.type='checkbox';input.checked=true;input.id='part-'+key;
@@ -49,13 +49,15 @@ function limb(a,b,start,end,colour,trim,gold,joint=true){
 function draw(){
   photoCtx.clearRect(0,0,540,720);
   if(picture)photoCtx.drawImage(picture,...frame);
-  else{photoCtx.fillStyle='#e9e8df';photoCtx.fillRect(0,0,540,720)}
-  photoCtx.strokeStyle='#487c6b';photoCtx.lineWidth=3;
+  else{photoCtx.fillStyle='#f4f4f4';photoCtx.fillRect(0,0,540,720)}
+  photoCtx.strokeStyle='#222';photoCtx.lineWidth=3;
   for(const [a,b] of edges){photoCtx.beginPath();photoCtx.moveTo(...joints[a]);photoCtx.lineTo(...joints[b]);photoCtx.stroke()}
   for(const [key,[x,y]] of Object.entries(joints)){
-    photoCtx.beginPath();photoCtx.arc(x,y,7,0,Math.PI*2);photoCtx.fillStyle=key===drag?'#a53631':'#fffae9';photoCtx.fill();photoCtx.stroke();
+    photoCtx.beginPath();photoCtx.arc(x,y,7,0,Math.PI*2);photoCtx.fillStyle=key===drag?'#d0021b':'#fff';photoCtx.fill();photoCtx.stroke();
   }
-  ctx.clearRect(0,0,540,720); const j=activeJoints(), c=controls(), gold=c.gold, red=c.trim, green=c.mainColor;
+  ctx.clearRect(0,0,540,720);
+  if(!generated){ctx.fillStyle='#f2f2f2';ctx.fillRect(0,0,540,720);ctx.fillStyle='#111';ctx.font='600 30px "PingFang SC",sans-serif';ctx.textAlign='center';ctx.fillText('调整好左边的关节后',270,330);ctx.fillText('点“确认生成影偶”',270,378);ctx.textAlign='left';return}
+  const j=activeJoints(), c=controls(), gold=c.gold, red=c.trim, green=c.mainColor;
   if(c.rods==='显示') for(const side of ['l','r'])if(selected(side+'h'))line(j[side+'w'],shift(j[side+'w'],side==='l'?-95:95,85),'#302620',2);
   const skin={旦:'#edd2ab',生:'#dfba8c',净:'#a44530',末:'#c7a07b',丑:'#e4c799'}[c.role];
   const wide=c.upper==='靠'?28:c.upper==='蟒袍'?31:c.upper==='衫'?16:22;
@@ -127,16 +129,18 @@ $('image').addEventListener('change',async e=>{
   try{
     img.src=url;await img.decode();if(seq!==upload)return;
     picture=img;const scale=Math.min(540/img.width,720/img.height), w=img.width*scale,h=img.height*scale;
-    frame=[(540-w)/2,(720-h)/2,w,h];joints=structuredClone(sample);$('pose').value='photo';draw();
-    $('status').textContent='正在识别头部与四肢关节…';
-    const pose=await poseDetector();if(seq!==upload)return;
+    frame=[(540-w)/2,(720-h)/2,w,h];joints=structuredClone(sample);$('pose').value='photo';generated=false;draw();
+    const tick=setInterval(()=>{if(seq===upload&&!modelReady)$('status').textContent='照片已载入，识别模型下载中 '+modelPct+'%，下载完会自动识别…'},500);
+    $('status').textContent=modelReady?'正在识别头部与四肢关节…':'照片已载入，识别模型下载中 '+modelPct+'%…';
+    let pose;try{pose=await Promise.race([poseDetector(),new Promise((_,rej)=>setTimeout(()=>rej(Error('timeout')),90000))]);}finally{clearInterval(tick)}
+    if(seq!==upload)return;$('status').textContent='正在识别头部与四肢关节…';
     const result=pose.detect(img).landmarks[0];if(!result)throw Error('未发现清晰的单人姿态');
     joints=Object.fromEntries(Object.entries(index).map(([key,i])=>[key,[frame[0]+result[i].x*w,frame[1]+result[i].y*h]]));
-    $('status').textContent='姿态已识别，可以拖动关节微调。';draw();
-  }catch(err){if(seq===upload)$('status').textContent='自动识别失败，可拖动示例关节手动匹配照片。'}
+    $('status').textContent='姿态已识别。可以拖动关节微调，然后点“确认生成影偶”。';draw();
+  }catch(err){if(seq===upload)$('status').textContent=(err&&err.message==='timeout'?'识别模型下载太慢，已停止等待。':'没能自动识别出姿态。')+'请拖动左边的关节对齐照片里的人，然后点“确认生成影偶”。'}
   finally{URL.revokeObjectURL(url);if(seq===upload)e.target.value=''}
 });
-$('sample').addEventListener('click',()=>{upload++;stopDemonstration();picture=undefined;joints=structuredClone(sample);$('pose').value='photo';$('status').textContent='已恢复示例。';draw()});
+$('sample').addEventListener('click',()=>{upload++;generated=true;stopDemonstration();picture=undefined;joints=structuredClone(sample);$('pose').value='photo';$('status').textContent='已恢复示例。';draw()});
 function pos(e){const r=src.getBoundingClientRect();return [(e.clientX-r.left)*540/r.width,(e.clientY-r.top)*720/r.height]}
 src.addEventListener('pointerdown',e=>{
   const [x,y]=pos(e);drag=Object.keys(joints).find(k=>Math.hypot(joints[k][0]-x,joints[k][1]-y)<15);
@@ -266,3 +270,18 @@ $('copyCode').addEventListener('click', () => {
   try { navigator.clipboard.writeText(t).then(() => { b.textContent = '已复制'; }, sel); } catch (e) { sel(); }
 });
 setInterval(renderCode, 5000); renderCode();
+
+// ---- 预下载识别模型并显示进度；确认生成按钮 ----
+(async()=>{
+  const files=[new URL('vendor/wasm/vision_wasm_internal.wasm',location.href).href,new URL('vendor/wasm/vision_wasm_internal.js',location.href).href,new URL('vendor/pose_landmarker_lite.task',location.href).href];
+  const sizes=[9574032,204284,5777746], total=sizes.reduce((x,y)=>x+y,0); let got=0;
+  try{
+    for(const u of files){const r=await fetch(u);const rd=r.body.getReader();for(;;){const {done,value}=await rd.read();if(done)break;got+=value.length;modelPct=Math.min(99,Math.round(got*100/total));}}
+    await poseDetector(); modelReady=true; modelPct=100;
+    if(!picture&&/示例|试用/.test($('status').textContent))$('status').textContent='识别模型已就绪。可以上传全身照，也可以拖动示例关节试用。';
+  }catch(e){}
+})();
+const confirmBtn=document.createElement('button');confirmBtn.type='button';confirmBtn.id='confirmGen';confirmBtn.className='primary';confirmBtn.textContent='确认生成影偶';
+$('status').before(confirmBtn);
+confirmBtn.addEventListener('click',()=>{generated=true;stopDemonstration();draw();$('puppet').scrollIntoView({behavior:'smooth',block:'center'});try{mark('drag')}catch(e){}});
+{const pr=rolePresets[$('role').value];if(pr)for(const [k,v] of Object.entries(pr))$(k).value=v;draw();}

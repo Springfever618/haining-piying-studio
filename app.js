@@ -224,7 +224,7 @@ for (const tab of tabs) {
 }
 
 // ---- 体验码：记录用过的功能和体验时长，供问卷核对（不记录照片或任何个人信息） ----
-const QUESTIONNAIRE_URL = '';
+const QUESTIONNAIRE_URL = 'https://v.wjx.cn/vm/PMDWQVN.aspx';
 const EXP = {t0: Date.now(), mask: 0};
 const BITS = {photo:1, sample:2, drag:4, role:8, costume:16, pose:32, lora:64, export:128};
 const mark = k => { EXP.mask |= BITS[k]; renderCode(); };
